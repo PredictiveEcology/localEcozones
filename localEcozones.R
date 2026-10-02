@@ -26,8 +26,12 @@ defineModule(sim, list(
   ),
   inputObjects = bindrows(
     expectsInput("rasterToMatch_biomassParam", "SpatRaster",
-                 "Grid of the area used to estimate species parameters. Falls back to `rasterToMatch`."),
-    expectsInput("rasterToMatch", "SpatRaster", "Template raster.")
+                 "Grid of the area used to estimate species parameters; used first."),
+    expectsInput("rasterToMatchLarge", "SpatRaster", "Used if rasterToMatch_biomassParam is missing."),
+    expectsInput("studyArea_biomassParam", "SpatVector",
+                 "Used (at the resolution of rasterToMatch) if neither raster above exists."),
+    expectsInput("studyAreaLarge", "SpatVector", "Used if studyArea_biomassParam is missing."),
+    expectsInput("rasterToMatch", "SpatRaster", "Template raster; the last fallback.")
   ),
   outputObjects = bindrows(
     createsOutput("ecoregionLayer", "sf",
@@ -43,9 +47,23 @@ doEvent.localEcozones <- function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
-  ## made here, before Biomass_borealDataPrep's .inputObjects would make the national default
-  rtm <- if (!is.null(sim$rasterToMatch_biomassParam)) sim$rasterToMatch_biomassParam else sim$rasterToMatch
-  if (is.null(rtm)) stop("localEcozones needs rasterToMatch_biomassParam or rasterToMatch")
+  ## made here, before Biomass_borealDataPrep's .inputObjects would make the national default.
+  ## It must cover the area the species parameters are estimated on (the *_biomassParam / *Large
+  ## objects), which can be larger than rasterToMatch. The output is polygons, so the grid only
+  ## sets the resolution of their edges.
+  rtm <- Find(Negate(is.null), list(sim$rasterToMatch_biomassParam, sim$rasterToMatchLarge))
+  if (is.null(rtm)) {
+    sa <- Find(Negate(is.null), list(sim$studyArea_biomassParam, sim$studyAreaLarge))
+    if (!is.null(sa) && !is.null(sim$rasterToMatch)) {
+      sa <- terra::project(terra::vect(sa), terra::crs(sim$rasterToMatch))
+      rtm <- terra::rasterize(sa, terra::rast(terra::ext(sa), resolution = terra::res(sim$rasterToMatch),
+                                              crs = terra::crs(sim$rasterToMatch)))
+    } else {
+      rtm <- sim$rasterToMatch
+    }
+  }
+  if (is.null(rtm)) stop("localEcozones needs rasterToMatch_biomassParam, rasterToMatchLarge, ",
+                         "studyArea_biomassParam or studyAreaLarge (with rasterToMatch), or rasterToMatch")
   if (!suppliedElsewhere("ecoregionLayer", sim, where = "user")) {
     dPath <- getOption("reproducible.destinationPathShared", inputPath(sim))
     sim$ecoregionLayer <- localEcozones(rtm, destinationPath = dPath, bcLevel = P(sim)$bcLevel,
