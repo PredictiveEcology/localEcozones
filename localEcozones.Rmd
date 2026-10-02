@@ -1,0 +1,55 @@
+---
+title: "localEcozones Manual"
+date: "Last updated: `r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    number_sections: false
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+```{r setup-localEcozones, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, warning = FALSE, message = FALSE, results = "hold")
+```
+
+# Overview
+
+*localEcozones* makes LandR's `ecoregionLayer`, the polygons that *Biomass_borealDataPrep* uses
+to estimate `establishprob`, `maxB` and `maxANPP` for each species. It uses the local
+eco-zonation where one exists and national ecodistricts elsewhere. Every option follows
+elevation, so valley and subalpine parameters are not mixed in one ecoregion:
+
+- British Columbia: Biogeoclimatic Ecosystem Classification (BEC) zones, from the BC Data
+  Catalogue (`bcLevel`: `"ZONE"`, `"SUBZONE"` or `"MAP_LABEL"`).
+- Alberta: Natural Subregions of Alberta, 2005 (`abLevel`: `"NSRNAME"` or `"NRNAME"`). At the
+  subregion level the Rocky Mountain region is split into Alpine, Subalpine and Montane.
+- Elsewhere: national ecodistricts split into `elevationBand`-m elevation bands.
+
+On the South Coast of BC (ELF 13.2.2), western redcedar has more than 5% cover in 0.03% of the
+pixels above 1,500 m. The share of its ecoregion that it covers, which drives its
+`establishprob`, was 7.9% with ecodistricts and 0.4% with BEC zones.
+
+The provincial layer defines its own extent; the province outline is only used to keep it out
+of a neighbouring province. Labels are prefixed by province (`BC_CWH`, `AB_Subalpine`) or are
+the ecodistrict and band (`ED1012_500-1000m`). They are in the fields `ecoregion` and
+`ECODISTRIC`, the field *Biomass_borealDataPrep* reads by default.
+
+To add a province, add a function to `localZonations()` in `R/localEcozones.R`.
+
+# Parameters
+
+```{r moduleParams, echo = FALSE, eval = TRUE, results = "asis"}
+knitr::kable(SpaDES.core::moduleParams("localEcozones", ".."))
+```
+
+# Usage
+
+List it before *Biomass_borealDataPrep*:
+
+```{r usage}
+modules = c("PredictiveEcology/localEcozones@main",
+            "PredictiveEcology/Biomass_borealDataPrep@development", ...)
+```
