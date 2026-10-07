@@ -19,14 +19,14 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE, warning = FALSE, message = FALS
 
 *localEcozones* makes LandR's `ecoregionLayer`, the polygons that *Biomass_borealDataPrep* uses
 to estimate `establishprob`, `maxB` and `maxANPP` for each species. It uses the local
-eco-zonation where one exists and national ecodistricts elsewhere. Every option follows
-elevation, so valley and subalpine parameters are not mixed in one ecoregion:
+eco-zonation where one exists and national ecodistricts elsewhere. The BEC and Natural
+Subregion options follow elevation, so valley and subalpine parameters are not mixed in one ecoregion:
 
 - British Columbia: Biogeoclimatic Ecosystem Classification (BEC) zones, from the BC Data
   Catalogue (`bcLevel`: `"ZONE"`, `"SUBZONE"` or `"MAP_LABEL"`).
 - Alberta: Natural Subregions of Alberta, 2005 (`abLevel`: `"NSRNAME"` or `"NRNAME"`). At the
   subregion level the Rocky Mountain region is split into Alpine, Subalpine and Montane.
-- Elsewhere: national ecodistricts split into `elevationBand`-m elevation bands.
+- Elsewhere: the plain national ecodistrict. There are no elevation bands: zones shift with latitude, so a province-wide band is wrong.
 
 On the South Coast of BC (ELF 13.2.2), western redcedar has more than 5% cover in 0.03% of the
 pixels above 1,500 m. The share of its ecoregion that it covers, which drives its

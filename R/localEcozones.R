@@ -1,5 +1,5 @@
 ## Local eco-zonation for LandR's `ecoregionLayer`: the provincial zonation where we have one,
-## national ecodistricts split by elevation band elsewhere. Each source is one function returning
+## the plain national ecodistrict elsewhere. Each source is one function returning
 ## polygons with a `label` column; add a province by adding a function to `localZonations()`.
 
 ## Provinces that have a local zonation, and the function that gets it.
@@ -47,13 +47,9 @@ zonesNational <- function(rasterToMatch, destinationPath) {
 }
 
 ## Label of each cell: the local zone (already prefixed by province, e.g. "BC_CWH") where there is
-## one, else ecodistrict + elevation band (`elevationBand` m wide; NA: no bands).
-ecozoneLabels <- function(local, national, elevation, elevationBand) {
-  band <- if (is.na(elevationBand)) "" else {
-    lo <- floor(elevation / elevationBand) * elevationBand
-    ifelse(is.na(lo), "", paste0("_", lo, "-", lo + elevationBand, "m"))
-  }
-  out <- ifelse(is.na(local), paste0(national, band), local)
+## one, else the ecodistrict.
+ecozoneLabels <- function(local, national) {
+  out <- ifelse(is.na(local), national, local)
   out[is.na(local) & is.na(national)] <- NA_character_
   out
 }
@@ -61,8 +57,7 @@ ecozoneLabels <- function(local, national, elevation, elevationBand) {
 provinceAbbrev <- c(`British Columbia` = "BC", Alberta = "AB")
 
 ## The ecoregionLayer (sf): one polygon per label on the grid of rasterToMatch.
-localEcozones <- function(rasterToMatch, destinationPath, bcLevel = "ZONE", abLevel = "NSRNAME",
-                          elevationBand = 500) {
+localEcozones <- function(rasterToMatch, destinationPath, bcLevel = "ZONE", abLevel = "NSRNAME") {
   aoi <- terra::as.polygons(terra::ext(rasterToMatch), crs = terra::crs(rasterToMatch))
   provinces <- geodata::gadm("CAN", level = 1, path = destinationPath)
   provinces <- terra::project(provinces, terra::crs(rasterToMatch))
@@ -84,14 +79,10 @@ localEcozones <- function(rasterToMatch, destinationPath, bcLevel = "ZONE", abLe
     local[use] <- paste0(provinceAbbrev[[p]], "_", lab[use])
   }
 
-  ## ecodistricts and elevation only where there is no local zone
+  ## ecodistricts only where there is no local zone
   national <- terra::values(zonesNational(rasterToMatch, destinationPath))[, 1]
   national <- ifelse(is.na(national), NA_character_, paste0("ED", national))
-  elevation <- if (is.na(elevationBand)) NULL else {
-    dem <- geodata::elevation_30s(country = "CAN", path = destinationPath)
-    terra::values(reproducible::postProcessTo(dem, rasterToMatch, method = "bilinear", verbose = -1))[, 1]
-  }
-  labels <- ecozoneLabels(local, national, elevation, elevationBand)
+  labels <- ecozoneLabels(local, national)
   labels[is.na(terra::values(rasterToMatch)[, 1])] <- NA_character_
 
   r <- terra::rast(rasterToMatch, nlyrs = 1)

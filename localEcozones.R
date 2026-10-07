@@ -1,8 +1,8 @@
 defineModule(sim, list(
   name = "localEcozones",
   description = paste("The `ecoregionLayer` for LandR: the provincial eco-zonation where one exists (BC: BEC",
-                      "zones; Alberta: Natural Subregions), national ecodistricts split by elevation band",
-                      "elsewhere. All of them follow elevation, so species parameters estimated by",
+                      "zones; Alberta: Natural Subregions), national ecodistricts",
+                      "elsewhere. BEC zones and Natural Subregions follow elevation, so species parameters estimated by",
                       "Biomass_borealDataPrep per ecoregion are not shared between valley and subalpine."),
   keywords = c("ecoregion", "BEC", "Natural Subregions", "LandR"),
   authors = c(person("Eliot", "McIntire", email = "eliotmcintire@gmail.com", role = c("aut", "cre"))),
@@ -19,10 +19,7 @@ defineModule(sim, list(
                     "BEC level: 'ZONE' (e.g. CWH, MH, ESSF), 'SUBZONE' or 'MAP_LABEL'."),
     defineParameter("abLevel", "character", "NSRNAME", NA, NA,
                     paste("Alberta level: 'NSRNAME' (Natural Subregion; the Rocky Mountain region is split",
-                          "into Alpine, Subalpine and Montane) or 'NRNAME' (Natural Region).")),
-    defineParameter("elevationBand", "numeric", 500, 0, NA,
-                    paste("Width (m) of the elevation bands that split national ecodistricts where there is",
-                          "no local zonation. NA: no split."))
+                          "into Alpine, Subalpine and Montane) or 'NRNAME' (Natural Region)."))
   ),
   inputObjects = bindrows(
     expectsInput("rasterToMatch_biomassParam", "SpatRaster",
@@ -67,7 +64,7 @@ doEvent.localEcozones <- function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("ecoregionLayer", sim, where = "user")) {
     dPath <- getOption("reproducible.destinationPathShared", inputPath(sim))
     sim$ecoregionLayer <- localEcozones(rtm, destinationPath = dPath, bcLevel = P(sim)$bcLevel,
-                                        abLevel = P(sim)$abLevel, elevationBand = P(sim)$elevationBand) |>
+                                        abLevel = P(sim)$abLevel) |>
       reproducible::Cache(.functionName = "localEcozones")
   }
   invisible(sim)
