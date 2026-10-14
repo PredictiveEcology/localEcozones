@@ -13,7 +13,7 @@ defineModule(sim, list(
   citation = list(),
   documentation = list(),
   reqdPkgs = list("SpaDES.core", "bcdata", "dplyr", "geodata", "sf", "terra",
-                  "PredictiveEcology/reproducible@development (>= 3.2.1.9061)"), # postProcessTo(rasterize)
+                  "PredictiveEcology/reproducible@development (>= 3.2.1.9072)"), # logUrlAccess(); postProcessTo(rasterize)
   parameters = bindrows(
     defineParameter("bcLevel", "character", "ZONE", NA, NA,
                     "BEC level: 'ZONE' (e.g. CWH, MH, ESSF), 'SUBZONE' or 'MAP_LABEL'."),
