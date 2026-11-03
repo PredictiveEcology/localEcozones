@@ -1,0 +1,57 @@
+---
+title: "localEcozones Manual"
+date: "Last updated: 2026-11-03"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    number_sections: false
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+
+
+# Overview
+
+*localEcozones* makes LandR's `ecoregionLayer`, the polygons that *Biomass_borealDataPrep* uses
+to estimate `establishprob`, `maxB` and `maxANPP` for each species. It uses the local
+eco-zonation where one exists and national ecodistricts elsewhere. The BEC and Natural
+Subregion options follow elevation, so valley and subalpine parameters are not mixed in one ecoregion:
+
+- British Columbia: Biogeoclimatic Ecosystem Classification (BEC) zones, from the BC Data
+  Catalogue (`bcLevel`: `"ZONE"`, `"SUBZONE"` or `"MAP_LABEL"`).
+- Alberta: Natural Subregions of Alberta, 2005 (`abLevel`: `"NSRNAME"` or `"NRNAME"`). At the
+  subregion level the Rocky Mountain region is split into Alpine, Subalpine and Montane.
+- Elsewhere: the plain national ecodistrict. There are no elevation bands: zones shift with latitude, so a province-wide band is wrong.
+
+On the South Coast of BC (ELF 13.2.2), western redcedar has more than 5% cover in 0.03% of the
+pixels above 1,500 m. The share of its ecoregion that it covers, which drives its
+`establishprob`, was 7.9% with ecodistricts and 0.4% with BEC zones.
+
+The provincial layer defines its own extent; the province outline is only used to keep it out
+of a neighbouring province. Labels are prefixed by province (`BC_CWH`, `AB_Subalpine`) or are
+the ecodistrict and band (`ED1012_500-1000m`). They are in the fields `ecoregion` and
+`ECODISTRIC`, the field *Biomass_borealDataPrep* reads by default.
+
+To add a province, add a function to `localZonations()` in `R/localEcozones.R`.
+
+# Parameters
+
+
+|paramName |paramClass |default |min |max |paramDesc                                                                                                                                         |cacheKey |
+|:---------|:----------|:-------|:---|:---|:-------------------------------------------------------------------------------------------------------------------------------------------------|:--------|
+|bcLevel   |character  |ZONE    |NA  |NA  |BEC level: 'ZONE' (e.g. CWH, MH, ESSF), 'SUBZONE' or 'MAP_LABEL'.                                                                                 |TRUE     |
+|abLevel   |character  |NSRNAME |NA  |NA  |Alberta level: 'NSRNAME' (Natural Subregion; the Rocky Mountain region is split into Alpine, Subalpine and Montane) or 'NRNAME' (Natural Region). |TRUE     |
+
+# Usage
+
+List it before *Biomass_borealDataPrep*:
+
+
+``` r
+modules = c("PredictiveEcology/localEcozones@main",
+            "PredictiveEcology/Biomass_borealDataPrep@development", ...)
+```
