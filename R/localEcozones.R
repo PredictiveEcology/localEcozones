@@ -12,26 +12,33 @@ localZonations <- function() {
 zonesBC <- function(aoi, destinationPath, level = "ZONE") {
   ## computed before the query: bcdata cannot translate a geometry built inside filter()
   box <- sf::st_as_sfc(sf::st_bbox(sf::st_transform(sf::st_as_sf(aoi), 3005)))
-  v <- bcdata::bcdc_query_geodata("WHSE_FOREST_VEGETATION.BEC_BIOGEOCLIMATIC_POLY") |>
+  ## bcdata does not go through prepInputs(), so say where the data came from in the download ledger
+  reproducible::logUrlAccess(bcBecRecordUrl, destinationPath = destinationPath)
+  v <- bcBec(box, level)
+  if (identical(level, "SUBZONE")) v$label <- paste0(v$ZONE, v$SUBZONE) else v$label <- v[[level]]
+  terra::vect(v[, "label"])
+}
+
+## The BC Data Catalogue record "BEC Map" (layer WHSE_FOREST_VEGETATION.BEC_BIOGEOCLIMATIC_POLY).
+bcBecRecordUrl <- "https://catalogue.data.gov.bc.ca/dataset/f358a53b-ffde-4830-a325-a5a03ff672c3"
+
+## The BEC polygons that intersect `box` (in BC Albers), with the fields "ZONE" and `level`.
+bcBec <- function(box, level) {
+  bcdata::bcdc_query_geodata("WHSE_FOREST_VEGETATION.BEC_BIOGEOCLIMATIC_POLY") |>
     bcdata::filter(bcdata::INTERSECTS(box)) |>
     bcdata::select(dplyr::all_of(unique(c("ZONE", level)))) |>
     bcdata::collect()
-  if (identical(level, "SUBZONE")) v$label <- paste0(v$ZONE, v$SUBZONE) else v$label <- v[[level]]
-  terra::vect(v[, "label"])
 }
 
 ## Alberta: Natural Regions and Subregions of Alberta (2005), Open Government Licence - Alberta.
 ## `level` "NSRNAME" (subregion; follows elevation in the Rocky Mountain region: Alpine,
 ## Subalpine, Montane) or "NRNAME" (region).
 zonesAB <- function(aoi, destinationPath, level = "NSRNAME") {
-  f <- file.path(destinationPath, "natural_subregions_alberta_2005.geojson")
-  if (!file.exists(f)) {
-    url <- paste0("https://geospatial.alberta.ca/titan/rest/services/biota/",
-                  "natural_subregions_alberta_2005/FeatureServer/0/query?",
-                  "where=1%3D1&outFields=NSRNAME,NRNAME&outSR=4326&f=geojson")
-    utils::download.file(url, f, mode = "wb", quiet = TRUE)
-  }
-  v <- terra::vect(f)
+  url <- paste0("https://geospatial.alberta.ca/titan/rest/services/biota/",
+                "natural_subregions_alberta_2005/FeatureServer/0/query?",
+                "where=1%3D1&outFields=NSRNAME,NRNAME&outSR=4326&f=geojson")
+  v <- reproducible::prepInputs(url = url, targetFile = "natural_subregions_alberta_2005.geojson",
+                                destinationPath = destinationPath, fun = "terra::vect", verbose = -1)
   v$label <- v[[level]][[1]]
   v[, "label"]
 }
