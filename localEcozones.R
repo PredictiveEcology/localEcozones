@@ -12,7 +12,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list(),
   documentation = list(),
-  reqdPkgs = list("SpaDES.core", "bcdata", "dplyr", "geodata", "sf", "terra",
+  reqdPkgs = list("SpaDES.core", "bcdata", "dplyr", "geodata", "httr2", "sf", "terra",
                   "PredictiveEcology/reproducible@development (>= 3.2.1.9061)"), # postProcessTo(rasterize)
   parameters = bindrows(
     defineParameter("bcLevel", "character", "ZONE", NA, NA,
