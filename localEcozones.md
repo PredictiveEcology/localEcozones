@@ -1,6 +1,6 @@
 ---
 title: "localEcozones Manual"
-date: "Last updated: 2026-11-05"
+date: "Last updated: 2026-11-27"
 output:
   bookdown::html_document2:
     toc: true
