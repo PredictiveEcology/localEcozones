@@ -52,9 +52,7 @@ doEvent.localEcozones <- function(sim, eventTime, eventType) {
   if (is.null(rtm)) {
     sa <- Find(Negate(is.null), list(sim$studyArea_biomassParam, sim$studyAreaLarge))
     if (!is.null(sa) && !is.null(sim$rasterToMatch)) {
-      sa <- terra::project(terra::vect(sa), terra::crs(sim$rasterToMatch))
-      rtm <- terra::rasterize(sa, terra::rast(terra::ext(sa), resolution = terra::res(sim$rasterToMatch),
-                                              crs = terra::crs(sim$rasterToMatch)))
+      rtm <- studyAreaGrid(sa, sim$rasterToMatch)
     } else {
       rtm <- sim$rasterToMatch
     }

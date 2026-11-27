@@ -95,3 +95,15 @@ localEcozones <- function(rasterToMatch, destinationPath, bcLevel = "ZONE", abLe
   v$ECODISTRIC <- v$ecoregion
   v
 }
+
+#' A grid covering a study area, at the resolution and crs of `rasterToMatch`
+#'
+#' @param sa The study area: a `SpatVector`, or anything `terra::vect()` takes (`sf`, `Spatial`).
+#' @param rasterToMatch A `SpatRaster` whose resolution and crs the grid takes.
+#'
+#' @return A `SpatRaster`: `sa` rasterized on that grid.
+studyAreaGrid <- function(sa, rasterToMatch) {
+  if (!inherits(sa, "SpatVector")) sa <- terra::vect(sa) # terra::vect() has no method for a SpatVector
+  sa <- terra::project(sa, terra::crs(rasterToMatch))
+  terra::rasterize(sa, terra::rast(terra::ext(sa), resolution = terra::res(rasterToMatch), crs = terra::crs(rasterToMatch)))
+}
